@@ -1,7 +1,9 @@
 import enum
-import falcon
 import logging
 from typing import Any
+
+import falcon
+
 
 __all__ = ["Exceptions", "install_handler"]
 logger = logging.getLogger(__name__)
@@ -39,6 +41,8 @@ class _StructuredError(Exception):
 
 
 class Exceptions:
+    cls = _StructuredError
+
     @staticmethod
     def invalid_parameter(name: str, value: Any, constraint: str=None, type: str=None) -> Exception:
         if constraint:
@@ -65,8 +69,13 @@ class Exceptions:
         return _ErrorCode.NotAuthenticated.new(message)
 
     @staticmethod
-    def malformed_credentials() -> Exception:
+    def malformed_authentication() -> Exception:
         message = "authentication mechanism is malformed"
+        return _ErrorCode.NotAuthenticated.new(message)
+
+    @staticmethod
+    def missing_authentication() -> Exception:
+        message = "authentication is missing"
         return _ErrorCode.NotAuthenticated.new(message)
 
 
