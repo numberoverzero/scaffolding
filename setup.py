@@ -15,5 +15,7 @@ if __name__ == "__main__":
             "cryptography~=2.3",
             "falcon~=1.0",
             "pendulum~=2.0",
+            "psycopg2~=2.7",
+            "sqlalchemy~=1.2",
         ],
     )
