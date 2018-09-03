@@ -46,16 +46,16 @@ class Exceptions:
     @staticmethod
     def invalid_parameter(name: str, value: Any, constraint: str=None, type: str=None) -> Exception:
         if constraint:
-            message = f"{name!r} was {value!r} but should {constraint}"
+            message = f"{name!r} was {value!r} but must {constraint}"
         elif type:
-            message = f"{name!r} was {value!r} but should be a {type}"
+            message = f"{name!r} was {value!r} but must be a {type}"
         else:
             message = f"{name!r} cannot be {value!r}"
         return _ErrorCode.InvalidParameter.new(message)
 
     @staticmethod
     def missing_parameter(name: str) -> Exception:
-        message = f"{name!r} is required"
+        message = f"{name!r} is required and must not be null"
         return _ErrorCode.MissingParameter.new(message)
 
     @staticmethod
@@ -77,6 +77,11 @@ class Exceptions:
     def missing_authentication() -> Exception:
         message = "authentication is missing"
         return _ErrorCode.NotAuthenticated.new(message)
+
+    @staticmethod
+    def internal_error() -> Exception:
+        message = "An internal error occurred"
+        return _ErrorCode.InternalError.new(message)
 
 
 def install_handler(api: falcon.API) -> None:
