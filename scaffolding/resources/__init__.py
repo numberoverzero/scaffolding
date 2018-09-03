@@ -1,5 +1,6 @@
-from typing import Any, Optional
 import functools
+from typing import Any, Optional
+
 
 __all__ = ["set_tag", "get_tag"]
 
@@ -48,13 +49,3 @@ def get_tag(key: str, resource, verb: str) -> Optional[Any]:
         return getattr(resource, "on_" + verb.lower()).tags[key]
     except (AttributeError, KeyError):
         return None
-
-
-def operation_id(name):
-    """
-    class Resource:
-        @operation_id("listServers")
-        def on_get(self, ...):
-            pass
-    """
-    return set_tag("operation_id", name)
