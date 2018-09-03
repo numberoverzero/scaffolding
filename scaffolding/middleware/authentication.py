@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import falcon
 
 from ..exc import Exceptions
-from ..openapi import Specification
+from ..openapi import Specification, op_key
 
 
 logger = logging.getLogger(__name__)
@@ -128,13 +128,13 @@ class OpenApiAuthentication(AuthenticationMiddleware):
         self.mechanism_cache = {}  # type: Dict[Tuple[str, str], List[Tuple[str, callable]]]
 
     def get_auth_mechanisms_for_route(self, req: falcon.Request) -> List[Tuple[str, callable]]:
-        key = req.uri_template, req.method.lower()
+        key = op_key(req)
         try:
             return self.mechanism_cache[key]
         except KeyError:
             schemes = self.mechanism_cache[key] = [
                 OpenApiAuthentication.translate_scheme_mechanism(scheme)
-                for scheme in self.spec.get_security_schemes(*key)
+                for scheme in self.spec.get_operation(*key)["security"]
             ]
             return schemes
 
