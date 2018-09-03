@@ -1,7 +1,8 @@
-from .authentication import AuthenticationMiddleware
+from .authentication import AuthenticationMiddleware, OpenApiAuthentication
 from .database import Database
 
+
 __all__ = [
-    "AuthenticationMiddleware",
+    "AuthenticationMiddleware", "OpenApiAuthentication",
     "Database",
 ]
