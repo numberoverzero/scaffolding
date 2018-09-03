@@ -1,6 +1,9 @@
 from typing import Tuple
+
 import falcon
+
 from .spec import Specification, walk_path
+
 
 __all__ = ["OperationKey", "Specification", "op_key", "walk_path"]
 

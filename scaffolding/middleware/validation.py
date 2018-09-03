@@ -1,8 +1,11 @@
+from typing import Dict
+
 import falcon
 import marshmallow as ma
-from typing import Dict
+
 from ..exc import Exceptions
 from ..openapi import OperationKey, Specification, op_key
+
 
 error_messages = {
     "null": "missing",
