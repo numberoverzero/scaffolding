@@ -60,6 +60,11 @@ class Exceptions:
         return _ErrorCode.MissingParameter.new(message)
 
     @staticmethod
+    def unknown_parameter(name: str) -> Exception:
+        message = f"{name!r} is not a recognized parameter"
+        return _ErrorCode.InvalidParameter.new(message)
+
+    @staticmethod
     def invalid_login() -> Exception:
         message = "username or password are invalid"
         return _ErrorCode.NotAuthenticated.new(message)
