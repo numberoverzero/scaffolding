@@ -1,14 +1,8 @@
 import logging
+import functools
 import marshmallow as ma
 from ..exc import Exceptions
 from .parsing import walk_path
-
-# XXX @numberoverzero
-# XXX starting with marshmallow 3.x,
-# XXX this can simply use the truthy={True}, falsy={False} __init__ kwargs
-# XXX https://github.com/marshmallow-code/marshmallow/issues/762
-ma.fields.Boolean.truthy = {True}
-ma.fields.Boolean.falsy = {False}
 
 logger = logging.getLogger(__name__)
 error_messages = {
@@ -19,7 +13,7 @@ error_messages = {
     "validator_failed": "type"
 }
 field_classes = {
-    "boolean": ma.fields.Boolean,
+    "boolean": functools.partial(ma.fields.Boolean, truthy={True}, falsy={False}),
     "integer": ma.fields.Integer,
     "number": ma.fields.Number,
     "string": ma.fields.String,
@@ -42,7 +36,7 @@ def new_param_schema(operation: dict) -> ma.Schema:
         field.type_name = t
         fields[param["name"]] = field
     id = operation["operationId"]
-    schema = type(f"{id}#parameters", (ma.Schema,), fields)()
+    schema = type(f"{id}#parameters", (ma.Schema,), fields)(unknown=ma.RAISE)
     return schema
 
 
@@ -69,41 +63,45 @@ def new_body_schema(operation: dict) -> ma.Schema:
         field.type_name = t
         fields[name] = field
     id = operation["operationId"]
-    schema = type(f"{id}#body", (ma.Schema,), fields)()
+    schema = type(f"{id}#body", (ma.Schema,), fields)(unknown=ma.RAISE)
     return schema
 
 
 def validate_params(schema: ma.Schema, params: dict) -> None:
-    data, errors = schema.load(params)
-    if errors:
-        # TODO for now just send back the first error
-        name, error = next(iter(errors.items()))
-        if len(error) > 1:
-            logger.info(f"multiple errors for param {name} but only returning first {error}")
-        error = error[0]
-        if error == "type":
-            raise Exceptions.invalid_parameter(name, params[name], type=schema.fields[name].type_name)
-        elif error == "missing":
-            raise Exceptions.missing_parameter(name)
-        else:
-            raise Exceptions.internal_error()
-    params.clear()
-    params.update(data)
+    _validate(schema, params)
 
 
 def validate_body(schema: ma.Schema, body: dict) -> None:
-    data, errors = schema.load(body)
-    if errors:
+    _validate(schema, body)
+
+
+def _validate(schema: ma.Schema, blob: dict) -> None:
+    sn = schema.__class__.__name__
+    logger.debug(f"{sn} started validation")
+    try:
+        loaded_blob = schema.load(blob)
+    except ma.ValidationError as e:
+        logger.debug(f"{sn} failed validation")
+        errors = e.messages
         # TODO for now just send back the first error
         name, error = next(iter(errors.items()))
         if len(error) > 1:
             logger.info(f"multiple errors for param {name} but only returning first {error}")
         error = error[0]
         if error == "type":
-            raise Exceptions.invalid_parameter(name, body[name], type=schema.fields[name].type_name)
+            raise Exceptions.invalid_parameter(name, blob[name], type=schema.fields[name].type_name)
         elif error == "missing":
             raise Exceptions.missing_parameter(name)
+        elif error not in error_messages:
+            # XXX @numberoverzero marshmallow doesn't have a complete list
+            # XXX of keys to provide for default_errors, and some (like Unknown field)
+            # XXX don't have a key at all.  So we'll have to be do some string inspection here :(
+            if error == "Unknown field.":
+                raise Exceptions.unknown_parameter(name)
         else:
+            logger.warning(f"unexpected error message during validation: {name} {error}")
             raise Exceptions.internal_error()
-    body.clear()
-    body.update(data)
+    else:
+        logger.debug(f"{sn} succeeded validation")
+        blob.clear()
+        blob.update(loaded_blob)
