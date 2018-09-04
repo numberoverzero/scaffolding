@@ -16,9 +16,9 @@ class _ErrorCode(enum.Enum):
     MissingParameter = (400, "MissingParameter")
     InternalError = (500, "InternalError")
 
-    def __init__(self, http_status: int, name: str) -> None:
+    def __init__(self, http_status: int, id: str) -> None:
         self.http_status = http_status
-        self.name = name
+        self.id = id
 
     def new(self, message: str) -> "_StructuredError":
         return _StructuredError(self, message)
@@ -32,10 +32,10 @@ class _StructuredError(Exception):
     @staticmethod
     def handle(ex: "_StructuredError", req: falcon.Request, resp: falcon.Response, *_, **__) -> None:
         log = logger.error if ex.code.http_status == 500 else logger.info
-        log(f"{ex.code.name} during {req.method} {req.path}")
+        log(f"{ex.code.id} during {req.method} {req.path}")
         resp.status = ex.code.http_status
         resp.media = {
-            "code": ex.code.name,
+            "code": ex.code.id,
             "message": ex.message
         }
 
