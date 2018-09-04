@@ -30,10 +30,14 @@ class Operation:
         self.id = raw["operationId"]
         self.raw = raw
         self.spec = spec
+        self.body_schema = validation.new_body_schema(raw)
         self.param_schema = validation.new_param_schema(raw)
 
     def validate_params(self, params: dict) -> None:
         validation.validate_params(self.param_schema, params)
+
+    def validate_body(self, body: dict) -> None:
+        validation.validate_body(self.body_schema, body)
 
 
 class Operations:
