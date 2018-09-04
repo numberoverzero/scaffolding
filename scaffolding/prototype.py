@@ -40,4 +40,5 @@ def serve(
     if profile:
         # limit output to top 10% of calls
         api = ProfilerMiddleware(api, restrictions=(0.1,))
+    print(f"serving on {host}:{port}")
     run_simple(host, port, api, use_reloader=True)

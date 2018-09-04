@@ -212,5 +212,5 @@ def api_key_auth(name: str, loc: str) -> Tuple[str, Callable[[falcon.Request], O
 def no_auth() -> Tuple[str, Callable[[falcon.Request], Optional[tuple]]]:
     """Returns a tuple for use in AuthenticationMiddleware.get_auth_mechanisms_for_route"""
     def parse(req: falcon.Request) -> Optional[tuple]:
-        return None
+        return tuple()
     return "none", parse

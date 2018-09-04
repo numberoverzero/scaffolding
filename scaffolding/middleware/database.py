@@ -26,7 +26,7 @@ class DatabaseMiddleware:
     def __init__(self, db: Database) -> None:
         self.db = db
 
-    def process_response(self, *_, req_succeeded: bool, **__) -> None:
+    def process_response(self, req, resp, resource, req_succeeded: bool, **__) -> None:
         try:
             if self.db.autocommit:
                 if req_succeeded:
