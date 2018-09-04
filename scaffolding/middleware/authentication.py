@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import falcon
 
 from ..exc import Exceptions
-from ..openapi import Specification, op_key
+from ..openapi import Specification
 
 
 logger = logging.getLogger(__name__)
@@ -125,36 +125,36 @@ class OpenApiAuthentication(AuthenticationMiddleware):
     def __init__(self, spec: Specification) -> None:
         super().__init__()
         self.spec = spec
-        self.mechanism_cache = {}  # type: Dict[Tuple[str, str], List[Tuple[str, callable]]]
+        self.mechanism_cache = {}  # type: Dict[str, List[Tuple[str, callable]]]
 
     def get_auth_mechanisms_for_route(self, req: falcon.Request) -> List[Tuple[str, callable]]:
-        key = op_key(req)
+        operation = self.spec.operations.by_req(req)
         try:
-            return self.mechanism_cache[key]
+            return self.mechanism_cache[operation.id]
         except KeyError:
-            schemes = self.mechanism_cache[key] = [
-                OpenApiAuthentication.translate_scheme_mechanism(scheme)
-                for scheme in self.spec.get_operation(*key)["security"]
+            schemas = self.mechanism_cache[operation.id] = [
+                OpenApiAuthentication.translate_schema_mechanism(schema)
+                for schema in operation.raw["security"]
             ]
-            return schemes
+            return schemas
 
     @staticmethod
-    def translate_scheme_mechanism(scheme: dict) -> Tuple[str, callable]:
-        if not scheme:
+    def translate_schema_mechanism(schema: dict) -> Tuple[str, callable]:
+        if not schema:
             return no_auth()
-        t = scheme["type"]
+        t = schema["type"]
         if t == "http":
-            s = scheme["scheme"]
+            s = schema["scheme"]
             if s == "basic":
                 return basic_auth()
             elif s == "bearer":
                 return bearer_auth()
             else:
-                raise RuntimeError(f"unexpected scheme {s!r} for type 'http'")
+                raise RuntimeError(f"unexpected schema {s!r} for type 'http'")
         elif t == "apiKey":
-            return api_key_auth(scheme["name"], scheme["loc"])
+            return api_key_auth(schema["name"], schema["loc"])
         else:
-            raise RuntimeError(f"only basic and bearer schemes are supported")
+            raise RuntimeError(f"only basic and bearer schemas are supported")
 
 
 def basic_auth() -> Tuple[str, callable]:

@@ -1,10 +1,8 @@
-from typing import Dict
-
 import falcon
 import marshmallow as ma
 
 from ..exc import Exceptions
-from ..openapi import OperationKey, Specification, op_key
+from ..openapi import Operation, Specification
 
 
 error_messages = {
@@ -22,37 +20,17 @@ field_classes = {
 
 
 class OpenApiRequestValidation:
-    param_schemas: Dict[OperationKey, ma.Schema]
-
     def __init__(self, spec: Specification) -> None:
         self.spec = spec
-        self._init_param_schemas()
-
-    def _init_param_schemas(self) -> None:
-        self.param_schemas = {}
-        for id, operation in self.spec.operations.items():
-            key = operation["_key"]
-            fields = {}
-            for param in operation["parameters"]:
-                t = param["schema"]["type"]
-                field = field_classes[t](
-                    required=param.get("required", True),
-                    missing=param.get("default", ma.missing),
-                    error_messages=error_messages,
-                )
-                field.location = param["in"]
-                field.type_name = t
-                fields[param["name"]] = field
-            schema = type(f"{id}#parameters", (ma.Schema,), fields)()
-            self.param_schemas[key] = schema
 
     def process_resource(self, req: falcon.Request, resp: falcon.Response, resource, params: dict) -> None:
-        key = op_key(req)
-        self.collect_params(key, req, params)
-        self.validate_params(key, params)
+        operation = self.spec.operations.by_req(req)
+        OpenApiRequestValidation.collect_params(operation, req, params)
+        OpenApiRequestValidation.validate_params(operation, params)
 
-    def collect_params(self, key: OperationKey, req: falcon.Request, params: dict) -> None:
-        schema = self.param_schemas[key]
+    @staticmethod
+    def collect_params(operation: Operation, req: falcon.Request, params: dict) -> None:
+        schema = operation.param_schema
         # cache since req.cookies creates a copy
         cookies = req.cookies
         for name, f in schema.fields.items():
@@ -70,8 +48,9 @@ class OpenApiRequestValidation:
             if f.required and v is ma.missing:
                 raise Exceptions.missing_parameter(name)
 
-    def validate_params(self, key: OperationKey, params: dict) -> None:
-        schema = self.param_schemas[key]
+    @staticmethod
+    def validate_params(operation: Operation, params: dict) -> None:
+        schema = operation.param_schema
         data, errors = schema.load(params)
         if errors:
             # TODO for now just send back the first error
