@@ -13,7 +13,7 @@ class OpenApiRequestValidation:
 
     def process_resource(self, req: falcon.Request, resp: falcon.Response, resource, params: dict) -> None:
         operation = self.spec.operations.by_req(req)
-        OpenApiRequestValidation.collect_params(operation, req, params)
+        self.collect_params(operation, req, params)
         operation.validate_params(params)
         operation.validate_body(req.media)
 
