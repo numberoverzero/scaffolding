@@ -14,16 +14,19 @@ logger = logging.getLogger(__name__)
 class Specification:
     raw: dict
     operations: "Operations"
+    source_filename: Optional[str]=None
 
-    def __init__(self, spec: dict) -> None:
-        self.raw = parsing.flatten_spec(spec)
+    def __init__(self, raw: dict) -> None:
+        self.raw = parsing.flatten_spec(raw)
         self.operations = Operations(self)
 
     @classmethod
     def from_file(cls, path: str) -> "Specification":
         with open(path, "r") as f:
-            spec = yaml.safe_load(f)
-        return cls(spec)
+            raw = yaml.safe_load(f)
+        spec = cls(raw)
+        spec.source_filename = path
+        return spec
 
     @property
     def paths(self) -> Set[str]:

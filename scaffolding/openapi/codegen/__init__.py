@@ -29,7 +29,7 @@ def generate_resources(spec: Specification, out_filename: str) -> None:
         verbs = [o.verb for o in spec.operations.with_tag(tag)]
         path = next(iter(operations)).path
         resources.append(_render_b("resource", resource=resource_cls, verbs=verbs, path=path))
-    footer = _render_b("footer", resources=classes)
+    footer = _render_b("footer", resources=classes, spec_path=spec.source_filename)
     with open(out_filename, "wt") as out:
         out.write(header)
         out.write("".join(resources))

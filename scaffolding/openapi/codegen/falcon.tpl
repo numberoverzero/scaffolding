@@ -30,7 +30,7 @@ class {{ resource }}:{% for verb in verbs %}
 {% endfor %}{%  endblock %}
 {% block footer %}
 
-spec = Specification.from_file("/path/to/spec/v1.yaml")
+spec = Specification.from_file("{{ spec_path }}")
 api = API(
     middleware=[
         MyAuthentication(spec),
