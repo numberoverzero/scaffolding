@@ -1,8 +1,11 @@
 import falcon
+import logging
 import marshmallow as ma
 
 from ..exc import Exceptions
 from ..openapi import Operation, Specification
+
+logger = logging.getLogger(__name__)
 
 __all__ = ["OpenApiRequestValidation"]
 
@@ -14,8 +17,14 @@ class OpenApiRequestValidation:
     def process_resource(self, req: falcon.Request, resp: falcon.Response, resource, params: dict) -> None:
         operation = self.spec.operations.by_req(req)
         self.collect_params(operation, req, params)
-        operation.validate_params(params)
-        operation.validate_body(req.media)
+        if operation.has_params:
+            operation.validate_params(params)
+        else:
+            logging.debug(f"{operation.id} has no params, skipping validation")
+        if operation.has_body:
+            operation.validate_body(req.media)
+        else:
+            logging.debug(f"{operation.id} has no body, skipping validation")
 
     @staticmethod
     def collect_params(operation: Operation, req: falcon.Request, params: dict) -> None:

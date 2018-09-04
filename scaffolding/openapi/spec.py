@@ -1,6 +1,6 @@
 import falcon
 import yaml
-from typing import Optional, Callable, Any, List
+from typing import Optional, Callable, Any, Set
 from . import parsing, validation
 
 __all__ = ["Specification", "Operation"]
@@ -21,8 +21,8 @@ class Specification:
         return cls(spec)
 
     @property
-    def paths(self) -> List[str]:
-        return list(self.raw["paths"].keys())
+    def paths(self) -> Set[str]:
+        return set(self.raw["paths"].keys())
 
 
 class Operation:
@@ -33,6 +33,8 @@ class Operation:
     spec: Specification
     handler: Optional[Callable[[Any], None]] = None
 
+    __hash__ = object.__hash__
+
     def __init__(self, raw: dict, spec: Specification) -> None:
         self.id = parsing.get_id(raw)
         self.path, self.verb = parsing.get_route(raw)
@@ -40,6 +42,14 @@ class Operation:
         self.spec = spec
         self.body_schema = validation.new_body_schema(raw)
         self.param_schema = validation.new_param_schema(raw)
+
+    @property
+    def has_params(self) -> bool:
+        return bool(self.param_schema.fields)
+
+    @property
+    def has_body(self) -> bool:
+        return bool(self.body_schema.fields)
 
     def validate_params(self, params: dict) -> None:
         validation.validate_params(self.param_schema, params)
@@ -72,12 +82,12 @@ class Operations:
     def by_req(self, req: falcon.Request) -> Operation:
         return self.by_route(req.uri_template, req.method.lower())
 
-    def with_path(self, path: str) -> List[Operation]:
-        return [op for op in self if op.path == path]
+    def with_path(self, path: str) -> Set[Operation]:
+        return {op for op in self if op.path == path}
 
     @property
-    def ids(self) -> List[str]:
-        return list(self._by_id.keys())
+    def ids(self) -> Set[str]:
+        return set(self._by_id.keys())
 
     def __iter__(self):
         return iter(list(self._by_id.values()))
