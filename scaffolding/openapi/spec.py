@@ -23,11 +23,14 @@ class Specification:
 
 class Operation:
     id: str
+    verb: str
+    uri_template: str
     raw: dict
     spec: Specification
 
     def __init__(self, raw: dict, spec: Specification) -> None:
-        self.id = raw["operationId"]
+        self.id = parsing.get_id(raw)
+        self.uri_template, self.verb = parsing.get_route(raw)
         self.raw = raw
         self.spec = spec
         self.body_schema = validation.new_body_schema(raw)
@@ -49,8 +52,8 @@ class Operations:
         self._by_id = {}
         self._by_key = {}
         for uri_template, verb, raw_operation in parsing.iter_operations(spec.raw):
-            id = raw_operation["operationId"]
-            route = raw_operation["_route"]
+            id = parsing.get_id(raw_operation)
+            route = parsing.get_route(raw_operation)
             operation = Operation(raw_operation, spec)
             self._by_id[id] = operation
             self._by_key[route] = operation

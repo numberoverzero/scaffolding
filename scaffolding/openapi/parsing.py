@@ -1,7 +1,7 @@
 from typing import Generator, Tuple, Any, TypeVar
 from ..misc import Missing
 
-__all__ = ["PATH_VERBS", "iter_operations", "walk_path", "flatten_spec"]
+__all__ = ["PATH_VERBS", "iter_operations", "walk_path", "flatten_spec", "get_route", "get_id"]
 
 _T = TypeVar("T")
 PATH_VERBS = [
@@ -14,6 +14,15 @@ PATH_VERBS = [
     "patch",
     "trace"
 ]
+ROUTE_KEY = "_route"
+
+
+def get_id(operation: dict) -> str:
+    return operation["operationId"]
+
+
+def get_route(operation: dict) -> Tuple[str, str]:
+    return operation[ROUTE_KEY]
 
 
 def iter_operations(spec: dict) -> Generator[Tuple[str, str, dict], None, None]:
@@ -129,5 +138,5 @@ def _flatten_security(spec: dict) -> dict:
 
 def _inject_operation_routes(spec: dict) -> None:
     for uri_template, verb, operation in iter_operations(spec):
-        operation["_route"] = uri_template, verb
+        operation[ROUTE_KEY] = uri_template, verb
 
