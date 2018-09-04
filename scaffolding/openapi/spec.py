@@ -37,6 +37,7 @@ class Operation:
     id: str
     verb: str
     path: str
+    tags: List[str]
     raw: dict
     spec: Specification
     handler: Optional[Callable[[Any], None]] = None
@@ -44,10 +45,15 @@ class Operation:
     __hash__ = object.__hash__
 
     def __init__(self, raw: dict, spec: Specification) -> None:
-        self.id = parsing.get_id(raw)
-        self.path, self.verb = parsing.get_route(raw)
+
         self.raw = raw
         self.spec = spec
+
+        self.id = parsing.get_id(raw)
+        self.path, self.verb = parsing.get_route(raw)
+        # TODO move to parsing.get_tags
+        self.tags = raw["tags"]
+
         self.body_schema = validation.new_body_schema(raw)
         self.param_schema = validation.new_param_schema(raw)
 
@@ -105,9 +111,23 @@ class Operations:
     def with_path(self, path: str) -> Set[Operation]:
         return {op for op in self if op.path == path}
 
+    def with_tag(self, tag: str) -> Set[Operation]:
+        return {op for op in self if tag in op.tags}
+
     @property
     def ids(self) -> Set[str]:
         return set(self._by_id.keys())
+
+    @property
+    def tags(self) -> List[str]:
+        seen = set()
+        uniq_tags = []
+        for op in self:
+            for tag in op.tags:
+                if tag not in seen:
+                    uniq_tags.append(tag)
+                    seen.add(tag)
+        return uniq_tags
 
     def __iter__(self):
         return iter(list(self._by_id.values()))

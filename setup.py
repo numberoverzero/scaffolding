@@ -18,4 +18,9 @@ if __name__ == "__main__":
         include_package_data=True,
         packages=find_packages(exclude=("docs", "examples", "scripts", "tests")),
         install_requires=requirements,
+        entry_points={
+            "console_scripts": [
+                "scaffold = scaffolding.cli:cli"
+            ]
+        }
     )

@@ -3,12 +3,13 @@ argon2_cffi~=18.0
 bloop~=2.2
 cryptography~=2.3
 falcon~=1.0
-marshmallow~=3.*
+marshmallow~=3.0a1
 pendulum~=2.0
 psycopg2~=2.7
 pyyaml~=3.0
 sqlalchemy~=1.2
 
+jinja2~=2.0
 click~=6.7
 coverage
 flake8
