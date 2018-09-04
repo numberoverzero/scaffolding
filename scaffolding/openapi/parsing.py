@@ -3,7 +3,7 @@ from typing import Any, Generator, Tuple, TypeVar
 from ..misc import Missing
 
 
-__all__ = ["PATH_VERBS", "iter_operations", "walk_path", "flatten_spec", "get_route", "get_id", "iter_security_schemas"]
+__all__ = ["iter_operations", "walk_path", "flatten_spec", "get_route", "get_id", "iter_security_schemas"]
 
 _T = TypeVar("T")
 PATH_VERBS = [
@@ -83,6 +83,7 @@ def flatten_spec(spec: dict) -> dict:
     resolve(spec)
     _flatten_parameters(spec)
     _flatten_security(spec)
+    _ensure_tags(spec)
     _inject_operation_routes(spec)
     return spec
 
@@ -117,6 +118,12 @@ def _flatten_parameters(spec: dict) -> dict:
     return spec
 
 
+def _ensure_tags(spec: dict) -> dict:
+    for *_, operation in iter_operations(spec):
+        operation.setdefault("tags", [])
+    return spec
+
+
 def _flatten_security(spec: dict) -> dict:
     """Ensures every operation has at least one security option.
     If the "security" section is missing or empty, adds a no-auth option:
@@ -137,17 +144,15 @@ def _flatten_security(spec: dict) -> dict:
             security:  # <-- default no-auth added
               - {}
     """
-    for path in spec["paths"].values():
-        for verb in path.keys():
-            if verb not in PATH_VERBS:
-                continue
-            security = path[verb].setdefault("security", [])
-            if not security:
-                security.append({})
+    for *_, operation in iter_operations(spec):
+        security = operation.setdefault("security", [])
+        if not security:
+            security.append({})
     return spec
 
 
-def _inject_operation_routes(spec: dict) -> None:
+def _inject_operation_routes(spec: dict) -> dict:
     for path, verb, operation in iter_operations(spec):
         operation[ROUTE_KEY] = path, verb
+    return spec
 
