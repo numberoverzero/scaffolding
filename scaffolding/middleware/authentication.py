@@ -40,7 +40,7 @@ class AuthenticationMiddleware:
         """
         raise NotImplementedError
 
-    def get_login_principal(self, req: falcon.Request, username: str, password: str) -> Tuple(str, Any):
+    def get_login_principal(self, req: falcon.Request, username: str, password: str) -> Tuple[str, Any]:
         """
         Should return something like:
             ("user", UserObject)
@@ -55,7 +55,7 @@ class AuthenticationMiddleware:
         """
         raise NotImplementedError
 
-    def get_token_principal(self, req: falcon.Request, token: str) -> Tuple(str, Any):
+    def get_token_principal(self, req: falcon.Request, token: str) -> Tuple[str, Any]:
         """
         Should return something like:
             ("user", UserObject)
@@ -71,7 +71,7 @@ class AuthenticationMiddleware:
         raise NotImplementedError
 
     # noinspection PyMethodMayBeStatic
-    def get_anonymous_principal(self, req: falcon.Request) -> Tuple(str, Any):
+    def get_anonymous_principal(self, req: falcon.Request) -> Tuple[str, Any]:
         """
         By default, returns ("none", None)
         This is wired into the request as:

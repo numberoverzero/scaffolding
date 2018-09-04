@@ -4,6 +4,8 @@ import marshmallow as ma
 from ..exc import Exceptions
 from ..openapi import Operation, Specification
 
+__all__ = ["OpenApiRequestValidation"]
+
 
 class OpenApiRequestValidation:
     def __init__(self, spec: Specification) -> None:
