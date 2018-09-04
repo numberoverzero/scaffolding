@@ -18,6 +18,7 @@ reading an empty-but-valid json body twice raises:
 """
 import falcon
 import functools
+from .exc import Exceptions
 from .misc import Missing, Sentinel
 from .patches import Request
 
@@ -35,3 +36,4 @@ class API(falcon.API):
             router=None,
             independent_middleware=False):
         super().__init__(media_type, request_type, response_type, middleware, router, independent_middleware)
+        self.add_error_handler(Exceptions.cls)
