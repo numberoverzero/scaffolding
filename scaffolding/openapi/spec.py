@@ -1,6 +1,6 @@
 import falcon
 import yaml
-
+from typing import Optional, Callable, Any, List
 from . import parsing, validation
 
 __all__ = ["Specification", "Operation"]
@@ -20,6 +20,10 @@ class Specification:
             spec = yaml.safe_load(f)
         return cls(spec)
 
+    @property
+    def paths(self) -> List[str]:
+        return list(self.raw["paths"].keys())
+
 
 class Operation:
     id: str
@@ -27,6 +31,7 @@ class Operation:
     uri_template: str
     raw: dict
     spec: Specification
+    handler: Optional[Callable[[Any], None]] = None
 
     def __init__(self, raw: dict, spec: Specification) -> None:
         self.id = parsing.get_id(raw)
@@ -66,3 +71,7 @@ class Operations:
 
     def by_req(self, req: falcon.Request) -> Operation:
         return self.by_route(req.uri_template, req.method.lower())
+
+    @property
+    def operation_ids(self) -> List[str]:
+        return list(self._by_id.keys())

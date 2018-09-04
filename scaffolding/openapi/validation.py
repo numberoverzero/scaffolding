@@ -6,6 +6,7 @@ from .parsing import walk_path
 # XXX @numberoverzero
 # XXX starting with marshmallow 3.x,
 # XXX this can simply use the truthy={True}, falsy={False} __init__ kwargs
+# XXX https://github.com/marshmallow-code/marshmallow/issues/762
 ma.fields.Boolean.truthy = {True}
 ma.fields.Boolean.falsy = {False}
 
