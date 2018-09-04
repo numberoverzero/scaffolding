@@ -1,6 +1,8 @@
+import logging
 import falcon
 from .openapi import Specification
-from wsgiref import simple_server
+from werkzeug.serving import run_simple
+from werkzeug.contrib.profiler import ProfilerMiddleware
 from typing import Optional
 from .resources import autowire_resources
 
@@ -13,16 +15,17 @@ def serve(
         resources: Optional[list]=None,
         autowire: bool=True,
         autowire_ignore_errors: bool=True,
-        port: int=8080, local: bool=True) -> None:
+        port: int=8080, local: bool=True,
+        debug: bool=True,
+        profile: bool=True) -> None:
 
+    logging.basicConfig(level=logging.DEBUG if debug else logging.INFO)
     if autowire:
         if not spec or not resources:
             raise RuntimeError("must provide spec and resources when autowiring")
         autowire_resources(api, spec, resources, ignore_errors=autowire_ignore_errors)
 
     host = "localhost" if local else "127.0.0.1"
-    httpd = simple_server.make_server(host, port, api)
-    print(f"\n\nServing API on http://{host}:{port}")
     if spec:
         has_handler = False
         for o in spec.operations:
@@ -31,4 +34,7 @@ def serve(
                 print(f"  {o.id} {o.verb.upper()} {o.path}")
         if has_handler:
             print()
-    httpd.serve_forever()
+    if profile:
+        # limit output to top 10% of calls
+        api = ProfilerMiddleware(api, restrictions=(0.1,))
+    run_simple(host, port, api, use_reloader=True)
