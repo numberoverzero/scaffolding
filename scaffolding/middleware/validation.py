@@ -20,11 +20,11 @@ class OpenApiRequestValidation:
         if operation.has_params:
             operation.validate_params(params)
         else:
-            logging.debug(f"{operation.id} has no params, skipping validation")
+            logger.debug(f"{operation.id} has no params, skipping validation")
         if operation.has_body:
             operation.validate_body(req.media)
         else:
-            logging.debug(f"{operation.id} has no body, skipping validation")
+            logger.debug(f"{operation.id} has no body, skipping validation")
 
     @staticmethod
     def collect_params(operation: Operation, req: falcon.Request, params: dict) -> None:

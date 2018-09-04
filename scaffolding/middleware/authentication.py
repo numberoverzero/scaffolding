@@ -1,6 +1,6 @@
 import base64
 import logging
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Callable
 
 import falcon
 
@@ -81,7 +81,7 @@ class AuthenticationMiddleware:
         """
         return "none", None
 
-    def process_request(self, req: falcon.Request, resp: falcon.Response) -> None:
+    def process_resource(self, req: falcon.Request, resp: falcon.Response, resource, params: dict) -> None:
         mechanisms = self.get_auth_mechanisms_for_route(req)
         if not mechanisms:
             logger.warning(f"no auth mechanism for request {req.method} {req.path} {req.uri_template}")
@@ -134,7 +134,7 @@ class OpenApiAuthentication(AuthenticationMiddleware):
         except KeyError:
             schemas = self.mechanism_cache[operation.id] = [
                 OpenApiAuthentication.translate_schema_mechanism(schema)
-                for schema in operation.raw["security"]
+                for schema in operation.security_schemas
             ]
             return schemas
 
@@ -157,7 +157,7 @@ class OpenApiAuthentication(AuthenticationMiddleware):
             raise RuntimeError(f"only basic and bearer schemas are supported")
 
 
-def basic_auth() -> Tuple[str, callable]:
+def basic_auth() -> Tuple[str, Callable[[falcon.Request], Optional[tuple]]]:
     """Returns a tuple for use in AuthenticationMiddleware.get_auth_mechanisms_for_route"""
     def parse(req: falcon.Request) -> Optional[Tuple[str, str]]:
         header = req.auth  # type: str
@@ -177,9 +177,9 @@ def basic_auth() -> Tuple[str, callable]:
     return "basic", parse
 
 
-def bearer_auth() -> Tuple[str, callable]:
+def bearer_auth() -> Tuple[str, Callable[[falcon.Request], Optional[tuple]]]:
     """Returns a tuple for use in AuthenticationMiddleware.get_auth_mechanisms_for_route"""
-    def parse(req: falcon.Request) -> Optional[str]:
+    def parse(req: falcon.Request) -> Optional[Tuple[str]]:
         header = req.auth  # type: str
         if not header:
             return None
@@ -188,25 +188,29 @@ def bearer_auth() -> Tuple[str, callable]:
         token = header[7:]
         if not token:
             raise MALFORMED
-        return token
+        return token,
     return "token", parse
 
 
-def api_key_auth(name: str, loc: str) -> Tuple[str, callable]:
+def api_key_auth(name: str, loc: str) -> Tuple[str, Callable[[falcon.Request], Optional[tuple]]]:
     """Returns a tuple for use in AuthenticationMiddleware.get_auth_mechanisms_for_route"""
-    def parse(req: falcon.Request) -> Optional[str]:
+    def parse(req: falcon.Request) -> Optional[Tuple[str]]:
         if loc == "cookie":
-            return req.cookies.get(name)
+            val = req.cookies.get(name)
         elif loc == "header":
-            return req.get_header(name)
+            val = req.get_header(name)
         elif loc == "query":
-            return req.get_param(name)
+            val = req.get_param(name)
         else:
             raise RuntimeError(f"unknown apiKey location {loc!r}")
+        if val is not None:
+            return val,
+        return None
     return "token", parse
 
 
-def no_auth() -> Tuple[str, callable]:
+def no_auth() -> Tuple[str, Callable[[falcon.Request], Optional[tuple]]]:
     """Returns a tuple for use in AuthenticationMiddleware.get_auth_mechanisms_for_route"""
-    # no method of parsing the request
-    return "none", None
+    def parse(req: falcon.Request) -> Optional[tuple]:
+        return None
+    return "none", parse
