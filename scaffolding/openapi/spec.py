@@ -1,9 +1,11 @@
+import logging
 import falcon
 import yaml
-from typing import Optional, Callable, Any, Set
+from typing import Optional, Callable, Any, Set, List
 from . import parsing, validation
 
 __all__ = ["Specification", "Operation"]
+logger = logging.getLogger(__name__)
 
 
 class Specification:
@@ -23,6 +25,9 @@ class Specification:
     @property
     def paths(self) -> Set[str]:
         return set(self.raw["paths"].keys())
+
+    def get_security_schema(self, name: str) -> dict:
+        return self.raw["components"]["securitySchemes"][name]
 
 
 class Operation:
@@ -56,6 +61,18 @@ class Operation:
 
     def validate_body(self, body: dict) -> None:
         validation.validate_body(self.body_schema, body)
+
+    @property
+    def security_schemas(self) -> List[Optional[dict]]:
+        schemas = []
+        for name, args in parsing.iter_security_schemas(self.raw):
+            if args:
+                logger.warning("scaffolding.Operation doesn't support security args")
+            if name:
+                schemas.append(self.spec.get_security_schema(name))
+            else:
+                schemas.append(None)
+        return schemas
 
 
 class Operations:
