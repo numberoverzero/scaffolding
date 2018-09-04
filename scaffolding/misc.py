@@ -1,7 +1,7 @@
 import functools
 
 
-__all__ = ["Sentinel"]
+__all__ = ["Missing", "Sentinel"]
 
 
 def singleton(cls):
@@ -33,3 +33,6 @@ class Sentinel:
 
     def __repr__(self):
         return Sentinel.template.format(self.name, name=self.name)
+
+
+Missing = Sentinel("scaffolding.missing")
