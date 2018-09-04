@@ -28,14 +28,14 @@ class Specification:
 class Operation:
     id: str
     verb: str
-    uri_template: str
+    path: str
     raw: dict
     spec: Specification
     handler: Optional[Callable[[Any], None]] = None
 
     def __init__(self, raw: dict, spec: Specification) -> None:
         self.id = parsing.get_id(raw)
-        self.uri_template, self.verb = parsing.get_route(raw)
+        self.path, self.verb = parsing.get_route(raw)
         self.raw = raw
         self.spec = spec
         self.body_schema = validation.new_body_schema(raw)
@@ -56,7 +56,7 @@ class Operations:
 
         self._by_id = {}
         self._by_key = {}
-        for uri_template, verb, raw_operation in parsing.iter_operations(spec.raw):
+        for _, verb, raw_operation in parsing.iter_operations(spec.raw):
             id = parsing.get_id(raw_operation)
             route = parsing.get_route(raw_operation)
             operation = Operation(raw_operation, spec)
@@ -66,12 +66,18 @@ class Operations:
     def by_id(self, operation_id: str) -> Operation:
         return self._by_id[operation_id]
 
-    def by_route(self, uri_template: str, method: str) -> Operation:
-        return self._by_key[uri_template, method]
+    def by_route(self, path: str, method: str) -> Operation:
+        return self._by_key[path, method]
 
     def by_req(self, req: falcon.Request) -> Operation:
         return self.by_route(req.uri_template, req.method.lower())
 
+    def with_path(self, path: str) -> List[Operation]:
+        return [op for op in self if op.path == path]
+
     @property
-    def operation_ids(self) -> List[str]:
+    def ids(self) -> List[str]:
         return list(self._by_id.keys())
+
+    def __iter__(self):
+        return iter(list(self._by_id.values()))

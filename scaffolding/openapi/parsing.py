@@ -26,12 +26,12 @@ def get_route(operation: dict) -> Tuple[str, str]:
 
 
 def iter_operations(spec: dict) -> Generator[Tuple[str, str, dict], None, None]:
-    for uri_template, path in spec["paths"].items():
-        for verb in path.keys():
+    for path, path_obj in spec["paths"].items():
+        for verb in path_obj.keys():
             if verb not in PATH_VERBS:
                 continue
-            operation = path[verb]
-            yield uri_template, verb, operation
+            operation = path_obj[verb]
+            yield path, verb, operation
 
 
 def walk_path(spec, *path: str, default=Missing) -> Any:
@@ -137,6 +137,6 @@ def _flatten_security(spec: dict) -> dict:
 
 
 def _inject_operation_routes(spec: dict) -> None:
-    for uri_template, verb, operation in iter_operations(spec):
-        operation[ROUTE_KEY] = uri_template, verb
+    for path, verb, operation in iter_operations(spec):
+        operation[ROUTE_KEY] = path, verb
 
