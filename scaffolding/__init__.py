@@ -16,11 +16,14 @@ reading an empty-but-valid json body twice raises:
     https://github.com/falconry/falcon/issues/1234
     https://github.com/falconry/falcon/pull/1311
 """
-import falcon
 import functools
+
+import falcon
+
 from .exc import Exceptions
 from .misc import Missing, Sentinel
 from .patches import Request
+
 
 __all__ = ["Sentinel", "Missing", "Request", "API"]
 

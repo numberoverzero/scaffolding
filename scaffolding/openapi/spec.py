@@ -1,8 +1,11 @@
 import logging
+from typing import Any, Callable, List, Optional, Set
+
 import falcon
 import yaml
-from typing import Optional, Callable, Any, Set, List
+
 from . import parsing, validation
+
 
 __all__ = ["Specification", "Operation"]
 logger = logging.getLogger(__name__)

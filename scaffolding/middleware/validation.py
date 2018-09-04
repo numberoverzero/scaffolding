@@ -1,9 +1,11 @@
-import falcon
 import logging
+
+import falcon
 import marshmallow as ma
 
 from ..exc import Exceptions
 from ..openapi import Operation, Specification
+
 
 logger = logging.getLogger(__name__)
 

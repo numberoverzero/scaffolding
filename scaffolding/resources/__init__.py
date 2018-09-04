@@ -1,8 +1,11 @@
-import falcon
 import logging
-from ..openapi import Specification, Operation
-from .tags import tag, get_tag, get_tags
 from typing import Set
+
+import falcon
+
+from ..openapi import Operation, Specification
+from .tags import get_tag, get_tags, tag
+
 
 __all__ = ["tag", "get_tags", "get_tag", "autowire_resources"]
 logger = logging.getLogger(__name__)

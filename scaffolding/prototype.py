@@ -1,10 +1,13 @@
 import logging
-import falcon
-from .openapi import Specification
-from werkzeug.serving import run_simple
-from werkzeug.contrib.profiler import ProfilerMiddleware
 from typing import Optional
+
+import falcon
+from werkzeug.contrib.profiler import ProfilerMiddleware
+from werkzeug.serving import run_simple
+
+from .openapi import Specification
 from .resources import autowire_resources
+
 
 __all__ = ["serve"]
 

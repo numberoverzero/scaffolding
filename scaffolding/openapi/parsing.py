@@ -1,5 +1,7 @@
-from typing import Generator, Tuple, Any, TypeVar
+from typing import Any, Generator, Tuple, TypeVar
+
 from ..misc import Missing
+
 
 __all__ = ["PATH_VERBS", "iter_operations", "walk_path", "flatten_spec", "get_route", "get_id", "iter_security_schemas"]
 
