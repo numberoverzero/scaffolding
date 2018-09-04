@@ -3,6 +3,12 @@ import marshmallow as ma
 from ..exc import Exceptions
 from .parsing import walk_path
 
+# XXX @numberoverzero
+# XXX starting with marshmallow 3.x,
+# XXX this can simply use the truthy={True}, falsy={False} __init__ kwargs
+ma.fields.Boolean.truthy = {True}
+ma.fields.Boolean.falsy = {False}
+
 logger = logging.getLogger(__name__)
 error_messages = {
     "null": "missing",
