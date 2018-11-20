@@ -13,11 +13,18 @@ __all__ = ["OpenApiRequestValidation"]
 
 
 class OpenApiRequestValidation:
-    def __init__(self, spec: Specification) -> None:
+    def __init__(self, spec: Specification, skip_options=True) -> None:
         self.spec = spec
+        self.skip_options = skip_options
 
     def process_resource(self, req: falcon.Request, resp: falcon.Response, resource, params: dict) -> None:
-        operation = self.spec.operations.by_req(req)
+        if req.method.lower() == "options" and self.skip_options:
+            return
+        try:
+            operation = self.spec.operations.by_req(req)
+        except KeyError:
+            logger.warning(f"no operation found for {req.method.upper()} {req.uri_template}")
+            raise Exceptions.not_found()
         self.collect_params(operation, req, params)
         if operation.has_params:
             operation.validate_params(params)
