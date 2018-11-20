@@ -2,6 +2,7 @@ import logging
 from typing import Optional
 
 import falcon
+import falcon_cors
 from werkzeug.contrib.profiler import ProfilerMiddleware
 from werkzeug.serving import run_simple
 
@@ -9,7 +10,13 @@ from .openapi import Specification
 from .resources import autowire_resources
 
 
-__all__ = ["serve"]
+__all__ = ["global_cors", "serve"]
+
+global_cors = falcon_cors.CORS(
+    allow_all_origins=True,
+    allow_all_methods=True,
+    allow_all_headers=True,
+).middleware
 
 
 def serve(

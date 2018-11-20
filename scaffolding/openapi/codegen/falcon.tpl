@@ -3,7 +3,7 @@ import json
 from scaffolding import API
 from scaffolding.middleware import OpenApiAuthentication, OpenApiRequestValidation
 from scaffolding.openapi import Specification
-from scaffolding.prototype import serve
+from scaffolding.prototype import SkipOptionsMiddleware, serve, global_cors
 from scaffolding.resources import tag
 
 
@@ -33,6 +33,8 @@ class {{ resource }}:{% for verb in verbs %}
 spec = Specification.from_file("{{ spec_path }}")
 api = API(
     middleware=[
+        global_cors,
+        SkipOptionsMiddleware(),
         MyAuthentication(spec),
         OpenApiRequestValidation(spec)
     ],
