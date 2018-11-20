@@ -85,6 +85,11 @@ class Exceptions:
         return _ErrorCode.NotAuthenticated.new(message)
 
     @staticmethod
+    def not_found() -> Exception:
+        message = "endpoint or method not recognized"
+        return _ErrorCode.NotFound.new(message)
+
+    @staticmethod
     def internal_error() -> Exception:
         message = "An internal error occurred"
         return _ErrorCode.InternalError.new(message)
