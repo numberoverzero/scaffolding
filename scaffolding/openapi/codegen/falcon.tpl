@@ -4,7 +4,7 @@ import os
 from scaffolding import API
 from scaffolding.middleware import OpenApiAuthentication, OpenApiRequestValidation
 from scaffolding.openapi import Specification
-from scaffolding.prototype import SkipOptionsMiddleware, serve, global_cors
+from scaffolding.prototype import serve, global_cors
 from scaffolding.resources import tag
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -36,7 +36,6 @@ spec = Specification.from_file(f"{HERE}/v1.yaml")
 api = API(
     middleware=[
         global_cors,
-        SkipOptionsMiddleware(),
         MyAuthentication(spec),
         OpenApiRequestValidation(spec)
     ],
