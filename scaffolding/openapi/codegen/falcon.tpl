@@ -25,8 +25,9 @@ class MyAuthentication(OpenApiAuthentication):
 {% block resource %}
 
 @tag(path="{{ path }}")
-class {{ resource }}:{% for verb in verbs %}
-    def on_{{ verb }}(self, req: falcon.Request, resp: falcon.Response, **params) -> None:
+class {{ resource }}:{% for op in operations %}
+    def on_{{ op.verb }}(self, req: falcon.Request, resp: falcon.Response, **params) -> None:
+        """{{ op.id }}"""
         resp.media = ctx = format(req, params)
         print(dump(ctx))
 {% endfor %}{%  endblock %}
