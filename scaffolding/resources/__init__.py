@@ -4,10 +4,11 @@ from typing import Set
 import falcon
 
 from ..openapi import Operation, Specification
+from .pagination import Pagination
 from .tags import get_tag, get_tags, tag
 
 
-__all__ = ["tag", "get_tags", "get_tag", "autowire_resources"]
+__all__ = ["Pagination", "tag", "get_tags", "get_tag", "autowire_resources"]
 logger = logging.getLogger(__name__)
 
 

@@ -1,4 +1,5 @@
 import click
+
 from .openapi import Specification
 from .openapi.codegen import generate_resources
 

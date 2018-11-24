@@ -1,7 +1,10 @@
-import os
 import logging
+import os
+
 import jinja2
+
 from ..spec import Specification
+
 
 logger = logging.getLogger(__name__)
 here = os.path.abspath(os.path.dirname(__file__))
