@@ -28,9 +28,9 @@ class Pagination:
     """
     def __init__(
             self, *,
-            limit: int=100,
-            parameter_name: str="continuationToken",
-            encryption: SimpleSymmetricEncryption=None) -> None:
+            limit: int = 100,
+            parameter_name: str = "continuationToken",
+            encryption: SimpleSymmetricEncryption = None) -> None:
         if encryption is None:
             encryption = SimpleSymmetricEncryption()
         # by default, uses "values[-1].id" to get the last id
@@ -39,11 +39,13 @@ class Pagination:
         self.parameter_name = parameter_name
         self.encryption = encryption
 
-    def pack(self, next_token: str, account_id: str=None) -> Optional[str]:
+    def pack(self, next_token: Optional[str], account_id: str = None) -> str:
+        if next_token is None:
+            return ""
         return self.encryption.encrypt(next_token, account_id=account_id)
 
-    def unpack(self, previous_token: Optional[str], account_id: str=None) -> Optional[str]:
-        if previous_token is None:
+    def unpack(self, previous_token: Optional[str], account_id: str = None) -> Optional[str]:
+        if not previous_token:
             return None
         token = self.encryption.decrypt(previous_token, account_id=account_id)
         if token is None:

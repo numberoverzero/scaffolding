@@ -18,7 +18,7 @@ __all__ = [
 ]
 
 
-def generate_token(prefix: str, nbytes: int=32) -> str:
+def generate_token(prefix: str, nbytes: int = 32) -> str:
     tok = secrets.token_urlsafe(nbytes=nbytes)
     return f"{prefix}.{tok}"
 
@@ -56,7 +56,7 @@ class SimpleSymmetricEncryption:
         self.material = key_material
 
     @staticmethod
-    def canonicalize(*, data: str, account_id: Optional[str]=None) -> str:
+    def canonicalize(*, data: str, account_id: Optional[str] = None) -> str:
         account_id = account_id or "NO_ACCOUNT"
         return f"{account_id}.{data}"
 
@@ -67,11 +67,11 @@ class SimpleSymmetricEncryption:
             account_id = None
         return {"data": data, "account_id": account_id}
 
-    def encrypt(self, data: str, account_id: Optional[str]=None) -> str:
+    def encrypt(self, data: str, account_id: Optional[str] = None) -> str:
         to_encrypt = SimpleSymmetricEncryption.canonicalize(data=data, account_id=account_id)
         return self.key.encrypt(to_encrypt.encode()).decode()
 
-    def decrypt(self, data: str, account_id: Optional[str]=None) -> Optional[str]:
+    def decrypt(self, data: str, account_id: Optional[str] = None) -> Optional[str]:
         to_parse = self.key.decrypt(data.encode()).decode()
         result = SimpleSymmetricEncryption.parse(to_parse)
         if account_id:
