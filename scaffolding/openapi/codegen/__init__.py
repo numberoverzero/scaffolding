@@ -1,13 +1,13 @@
 import logging
 from ..spec import Specification
 from ...misc import Template
-
+from .models import ModelBackend
 
 logger = logging.getLogger(__name__)
 
 
-def generate_resources(spec: Specification, out_filename: str) -> None:
-    tpl = Template.from_here(__file__, "falcon.tpl")
+def generate_resources(spec: Specification, out_path: str) -> None:
+    tpl = Template.from_here(__file__, "_falcon.tpl")
     resources = []
     classes = []
     tags = spec.operations.tags
@@ -22,7 +22,14 @@ def generate_resources(spec: Specification, out_filename: str) -> None:
         path = next(iter(operations)).path
         resources.append(tpl.block("resource", resource=resource_cls, verbs=verbs, operations=operations, path=path))
     footer = tpl.block("footer", resources=classes, spec_path=spec.source_filename)
-    with open(out_filename, "wt") as out:
+    with open(out_path, "wt") as out:
         out.write(header)
         out.write("".join(resources))
         out.write(footer)
+
+
+def generate_models(spec: Specification, backend_name: str, out_path: str) -> None:
+    backend = ModelBackend.get_backend(backend_name)
+    data = backend.render_spec(spec)
+    with open(out_path, "wt") as out:
+        out.write(data)

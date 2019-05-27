@@ -24,21 +24,21 @@ class Template:
         return cls(tpl)
 
     @classmethod
-    def from_here(cls, __file__: str, filename: str) -> "Template":
+    def from_here(cls, __file__: str, *path: str) -> "Template":
         here = os.path.abspath(os.path.dirname(__file__))
-        path = os.path.join(here, filename)
+        path = os.path.join(here, *path)
         return cls.from_file(path)
 
 
-def singleton(cls):
+def singleton(func):
     instances = {}
 
-    @functools.wraps(cls)
-    def get(name: str):
+    @functools.wraps(func)
+    def get(*args):
         try:
-            return instances[name]
+            return instances[args]
         except KeyError:
-            o = instances[name] = cls(name)
+            o = instances[args] = func(*args)
             return o
     return get
 
