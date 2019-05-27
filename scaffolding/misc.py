@@ -1,7 +1,33 @@
 import functools
+import os
+
+import jinja2
+
+__all__ = ["Missing", "Sentinel", "Template"]
 
 
-__all__ = ["Missing", "Sentinel"]
+class Template:
+    def __init__(self, tpl: jinja2.Template) -> None:
+        self.tpl = tpl
+
+    def render_block(self, __name: str, **kwargs) -> str:
+        block = self.tpl.blocks[__name]
+        ctx = self.tpl.new_context(vars=kwargs)
+        return "".join(block(ctx))
+
+    block = render_block
+
+    @classmethod
+    def from_file(cls, path: str) -> "Template":
+        with open(path, "r") as stream:
+            tpl = jinja2.Template(stream.read())
+        return cls(tpl)
+
+    @classmethod
+    def from_here(cls, __file__: str, filename: str) -> "Template":
+        here = os.path.abspath(os.path.dirname(__file__))
+        path = os.path.join(here, filename)
+        return cls.from_file(path)
 
 
 def singleton(cls):
