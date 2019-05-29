@@ -29,6 +29,12 @@ class Template:
         path = os.path.join(here, *path)
         return cls.from_file(path)
 
+    @classmethod
+    def from_pkg(cls, tpl_name, *, pkg_name="scaffolding", pkg_path="templates") -> "Template":
+        env = jinja2.Environment(loader=jinja2.PackageLoader(pkg_name, pkg_path))
+        tpl = env.get_template(tpl_name)
+        return cls(tpl)
+
 
 def singleton(func):
     instances = {}

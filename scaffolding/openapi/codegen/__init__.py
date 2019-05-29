@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 
 def generate_resources(spec: Specification, out_path: str) -> None:
-    tpl = Template.from_here(__file__, "_falcon.tpl")
+    tpl = Template.from_pkg("falcon.tpl")
     resources = []
     classes = []
     tags = spec.operations.tags
