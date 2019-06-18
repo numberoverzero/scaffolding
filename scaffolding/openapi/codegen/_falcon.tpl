@@ -1,7 +1,7 @@
 {% block header %}import falcon
 import json
 import os
-from scaffolding import API
+import scaffolding
 from scaffolding.middleware import OpenApiAuthentication, OpenApiRequestValidation
 from scaffolding.openapi import Specification
 from scaffolding.prototype import serve, global_cors
@@ -34,13 +34,15 @@ class {{ resource }}:{% for op in operations %}
 {% block footer %}
 
 spec = Specification.from_file(f"{HERE}/v1.yaml")
-api = API(
+api = falcon.API(
     middleware=[
         global_cors,
         MyAuthentication(spec),
         OpenApiRequestValidation(spec)
     ],
 )
+api.add_error_handler(scaffolding.error_handler)
+
 resources = [{% for resource in resources %}
     {{ resource }}(),{% endfor %}
 ]
