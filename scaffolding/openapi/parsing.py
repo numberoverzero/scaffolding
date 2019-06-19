@@ -5,7 +5,7 @@ from ..misc import Missing
 
 __all__ = ["iter_operations", "walk_path", "flatten_spec", "get_route", "get_id", "iter_security_schemas"]
 
-_T = TypeVar("T")
+_T = TypeVar("_T")
 PATH_VERBS = [
     "get",
     "put",

@@ -55,12 +55,12 @@ class ModelBackend:
         conflict = backends.get(name)
         if conflict:
             raise RuntimeError(f"name {name} used for both {cls} and {conflict}")
-        backends[name] = name
+        backends[name] = cls
         cls.t = Template.from_pkg(f"{cls.name}.tpl")
 
     @staticmethod
     def get_backend(name: str) -> "ModelBackend":
-        return ModelBackend._backends[name]
+        return ModelBackend._backends[name]()
 
     def render_spec(self, spec: Specification) -> str:
         self.validate_spec(spec)
@@ -78,7 +78,7 @@ class PostgresBackend(ModelBackend):
 
 
 class DynamoBackend(ModelBackend):
-    name = "dynamo-bloop"
+    name = "dynamodb-bloop"
 
     known_types = compile_known_types({
         "int": "Integer",
