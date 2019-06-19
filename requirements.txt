@@ -1,6 +1,6 @@
 alembic~=1.0
 argon2_cffi~=19.0
-bloop~=2.2
+bloop~=2.4
 cryptography~=2.3
 falcon~=2.0
 falcon-cors~=1.1
