@@ -1,7 +1,8 @@
 import re
 from typing import ClassVar, Dict, Tuple, Union
-from ..spec import Specification
+
 from ...misc import Template
+from ..proto_spec import ProtoSpec
 
 
 def compile_known_types(known_types: Dict[str, Union[str, Tuple[str, str]]]) -> Dict[re.Pattern, Tuple[str, str]]:
@@ -62,14 +63,14 @@ class ModelBackend:
     def get_backend(name: str) -> "ModelBackend":
         return ModelBackend._backends[name]()
 
-    def render_spec(self, spec: Specification) -> str:
+    def render_spec(self, spec: ProtoSpec) -> str:
         self.validate_spec(spec)
         return self._render_spec(spec)
 
-    def validate_spec(self, spec: Specification) -> None:
+    def validate_spec(self, spec: ProtoSpec) -> None:
         raise NotImplementedError
 
-    def _render_spec(self, spec: Specification) -> str:
+    def _render_spec(self, spec: ProtoSpec) -> str:
         raise NotImplementedError
 
 
@@ -97,7 +98,6 @@ class DynamoBackend(ModelBackend):
         "map": "DynamicMap",
     })
 
-    def validate_spec(self, spec: Specification) -> None:
+    def validate_spec(self, spec: ProtoSpec) -> None:
         # TODO
-        # models = spec.models
-        pass
+        models = spec.models

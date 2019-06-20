@@ -1,7 +1,9 @@
 import logging
-from ..spec import Specification
+
 from ...misc import Template
+from ..spec import Specification
 from .models import ModelBackend
+
 
 logger = logging.getLogger(__name__)
 

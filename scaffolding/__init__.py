@@ -12,4 +12,5 @@ When constructing a new API, register the scaffolding exceptions handler::
 from .exc import Exceptions
 from .misc import Missing, Sentinel
 
+
 error_handler = Exceptions.cls

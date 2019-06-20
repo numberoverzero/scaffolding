@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Callable, List, Optional, Set
+from typing import Any, Callable, Dict, List, Optional, Set
 
 import falcon
 import yaml
@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 class Specification:
     raw: dict
     operations: "Operations"
-    source_filename: Optional[str]=None
+    source_filename: Optional[str] = None
 
     def __init__(self, raw: dict) -> None:
         self.raw = parsing.flatten_spec(raw)
@@ -31,6 +31,10 @@ class Specification:
     @property
     def paths(self) -> Set[str]:
         return set(self.raw["paths"].keys())
+
+    @property
+    def models(self) -> Dict[str, dict]:
+        return dict(self.raw["components"]["schemas"])
 
     def get_security_schema(self, name: str) -> dict:
         return self.raw["components"]["securitySchemes"][name]
