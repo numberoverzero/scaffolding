@@ -1,5 +1,5 @@
 import re
-from typing import ClassVar, Dict, Tuple, Union
+from typing import ClassVar, Dict, Optional, Tuple, Union
 
 from ...misc import Template
 from ..proto_spec import ProtoSpec
@@ -64,13 +64,14 @@ class ModelBackend:
         return ModelBackend._backends[name]()
 
     def render_spec(self, spec: ProtoSpec) -> str:
-        self.validate_spec(spec)
-        return self._render_spec(spec)
+        meta = self.validate_spec(spec)
+        return self._render_spec(spec, meta=meta)
 
-    def validate_spec(self, spec: ProtoSpec) -> None:
+    def validate_spec(self, spec: ProtoSpec) -> Optional[dict]:
+        """may return a dict that simplifies or de-duplicates work for the renderer"""
         raise NotImplementedError
 
-    def _render_spec(self, spec: ProtoSpec) -> str:
+    def _render_spec(self, spec: ProtoSpec, meta: Optional[dict] = None) -> str:
         raise NotImplementedError
 
 
@@ -98,6 +99,37 @@ class DynamoBackend(ModelBackend):
         "map": "DynamicMap",
     })
 
-    def validate_spec(self, spec: ProtoSpec) -> None:
-        # TODO
-        models = spec.models
+    def validate_spec(self, spec: ProtoSpec) -> Optional[dict]:
+        meta = {
+            "bloop_types": set(),
+            "model_field_typedefs": {},
+        }
+        for model in spec.models.values():
+            fields = list(model.fields.values())
+            hash_keys = [f for f in fields if f.kwargs.get("hash_key")]
+            range_keys = [f for f in fields if f.kwargs.get("range_key")]
+            if len(hash_keys) < 1:
+                raise ValueError(f"model {model.name!r} must specify a hash_key")
+            elif len(hash_keys) > 1:
+                raise ValueError(f"model {model.name!r} specifies more than one hash_key")
+            if len(range_keys) > 1:
+                raise ValueError(f"model {model.name!r} has more than 1 range_key")
+            field_typedefs = meta["model_field_typedefs"][model.name] = {}
+            for field in fields:
+                backend_name, expanded_name = extract_type(field.type, DynamoBackend.known_types)
+                field_typedefs[field.name] = expanded_name
+                meta["bloop_types"].add(backend_name)
+        return meta
+
+    def _render_spec(self, spec: ProtoSpec, meta: Optional[dict] = None) -> str:
+        sp = "\n\n\n"
+        if meta is None:
+            meta = self.validate_spec(spec)
+        header = self.t.block("header", bloop_types=meta["bloop_types"])
+
+        models = []
+        for model in spec.models.values():
+            typedefs = meta["model_field_typedefs"][model.name]
+            models.append(self.t.block("model", model=model, typedefs=typedefs))
+
+        return f"{header}{sp}{sp.join(models)}\n"
