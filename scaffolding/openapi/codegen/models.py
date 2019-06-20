@@ -94,6 +94,54 @@ class ModelBackend:
 class PostgresBackend(ModelBackend):
     name = "pg-sqlalchemy"
 
+    known_types = compile_known_types({
+        # https://docs.sqlalchemy.org/en/13/core/type_basics.html#generic-types
+        "bool": "Boolean",
+        "date": "Date",
+        "datetime": "DateTime",
+        "enum(*)": ("Enum", "Enum(*)"),
+        "float": "Float",
+        "float(*)": ("Float", "Float(*)"),
+        "int": "Integer",
+        "str": "String",
+        "text": "Text",
+        "text(*)": ("Text", "Text(*)"),
+        # https://docs.sqlalchemy.org/en/13/core/type_basics.html#sql-standard-and-multiple-vendor-types
+        "array(*)": ("ARRAY", "ARRAY(*)"),
+        "bytes": "BINARY",
+        "json": "JSON",
+    })
+
+    def validate_spec(self, spec: ProtoSpec) -> Optional[dict]:
+        meta = {
+            "type_imports": set(),
+            "model_typedefs": {},
+        }
+        for model in spec.models.values():
+            fields = list(model.fields.values())
+            pks = [f for f in fields if f.kwargs.get("primary_key")]
+            if len(pks) < 1:
+                raise ValueError(f"model {model.name!r} must specify a primary_key")
+            field_typedefs = meta["model_typedefs"][model.name] = {}
+            for field in fields:
+                backend_name, expanded_name = extract_type(field.type, PostgresBackend.known_types)
+                field_typedefs[field.name] = expanded_name
+                meta["sqlalchemy_types"].add(backend_name)
+        return meta
+
+    def _render_spec(self, spec: ProtoSpec, meta: Optional[dict] = None) -> str:
+        sp = "\n\n\n"
+        if meta is None:
+            meta = self.validate_spec(spec)
+        header = self.t.block("header", type_imports=meta["type_imports"])
+
+        models = []
+        for model in spec.models.values():
+            typedefs = meta["model_typedefs"][model.name]
+            models.append(self.t.block("model", model=model, typedefs=typedefs))
+
+        return f"{header}{sp}{sp.join(models)}\n"
+
 
 class DynamoBackend(ModelBackend):
     name = "dynamodb-bloop"
@@ -117,8 +165,8 @@ class DynamoBackend(ModelBackend):
 
     def validate_spec(self, spec: ProtoSpec) -> Optional[dict]:
         meta = {
-            "bloop_types": set(),
-            "model_field_typedefs": {},
+            "type_imports": set(),
+            "model_typedefs": {},
         }
         for model in spec.models.values():
             fields = list(model.fields.values())
@@ -130,7 +178,7 @@ class DynamoBackend(ModelBackend):
                 raise ValueError(f"model {model.name!r} specifies more than one hash_key")
             if len(range_keys) > 1:
                 raise ValueError(f"model {model.name!r} has more than 1 range_key")
-            field_typedefs = meta["model_field_typedefs"][model.name] = {}
+            field_typedefs = meta["model_typedefs"][model.name] = {}
             for field in fields:
                 backend_name, expanded_name = extract_type(field.type, DynamoBackend.known_types)
                 field_typedefs[field.name] = expanded_name
@@ -141,11 +189,11 @@ class DynamoBackend(ModelBackend):
         sp = "\n\n\n"
         if meta is None:
             meta = self.validate_spec(spec)
-        header = self.t.block("header", bloop_types=meta["bloop_types"])
+        header = self.t.block("header", type_imports=meta["type_imports"])
 
         models = []
         for model in spec.models.values():
-            typedefs = meta["model_field_typedefs"][model.name]
+            typedefs = meta["model_typedefs"][model.name]
             models.append(self.t.block("model", model=model, typedefs=typedefs))
 
         return f"{header}{sp}{sp.join(models)}\n"
