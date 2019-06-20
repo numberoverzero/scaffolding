@@ -1,8 +1,9 @@
 import logging
 
 from ...misc import Template
+from ..proto_spec import ProtoSpec
 from ..spec import Specification
-from .models import ModelBackend
+from .models import render_models
 
 
 logger = logging.getLogger(__name__)
@@ -29,8 +30,7 @@ def generate_resources(spec: Specification, out_path: str) -> None:
         out.write(f"{header}{sp}{sp.join(resources)}{sp}{footer}\n")
 
 
-def generate_models(spec: Specification, backend_name: str, out_path: str) -> None:
-    backend = ModelBackend.get_backend(backend_name)
-    data = backend.render_spec(spec)
+def generate_models(backend_name: str, proto_spec: ProtoSpec, out_path: str) -> None:
+    data = render_models(backend_name, proto_spec)
     with open(out_path, "wt") as out:
         out.write(data)

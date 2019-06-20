@@ -1,8 +1,20 @@
 import re
-from typing import ClassVar, Dict, Optional, Tuple, Union
+from typing import ClassVar, Dict, List, Optional, Tuple, Union
 
 from ...misc import Template
 from ..proto_spec import ProtoSpec
+
+
+__all__ = ["list_backends", "render_models"]
+
+
+def list_backends():
+    return ModelBackend.list_backends()
+
+
+def render_models(backend_name: str, proto_spec: ProtoSpec) -> str:
+    backend = ModelBackend.get_backend(backend_name)
+    return backend.render_spec(proto_spec)
 
 
 def compile_known_types(known_types: Dict[str, Union[str, Tuple[str, str]]]) -> Dict[re.Pattern, Tuple[str, str]]:
@@ -60,12 +72,16 @@ class ModelBackend:
         cls.t = Template.from_pkg(f"{cls.name}.tpl")
 
     @staticmethod
+    def list_backends() -> List[str]:
+        return sorted(ModelBackend._backends.keys())
+
+    @staticmethod
     def get_backend(name: str) -> "ModelBackend":
         return ModelBackend._backends[name]()
 
-    def render_spec(self, spec: ProtoSpec) -> str:
-        meta = self.validate_spec(spec)
-        return self._render_spec(spec, meta=meta)
+    def render_spec(self, proto_spec: ProtoSpec) -> str:
+        meta = self.validate_spec(proto_spec)
+        return self._render_spec(proto_spec, meta=meta)
 
     def validate_spec(self, spec: ProtoSpec) -> Optional[dict]:
         """may return a dict that simplifies or de-duplicates work for the renderer"""
