@@ -2,6 +2,7 @@ import logging
 from typing import Any, Callable, Dict, List, Optional, Set
 
 import falcon
+import marshmallow
 import yaml
 
 from . import parsing, validation
@@ -18,14 +19,19 @@ class Specification:
 
     def __init__(self, raw: dict) -> None:
         self.raw = parsing.flatten_spec(raw)
-        self.operations = Operations(self)
 
     @classmethod
     def from_file(cls, path: str) -> "Specification":
         with open(path, "r") as f:
             raw = yaml.safe_load(f)
-        spec = cls(raw)
+        spec = cls.from_raw(raw)
         spec.source_filename = path
+        return spec
+
+    @classmethod
+    def from_raw(cls, raw: dict) -> "Specification":
+        spec = cls(raw)
+        spec.operations = Operations.from_raw(spec)
         return spec
 
     @property
@@ -49,6 +55,9 @@ class Operation:
     spec: Specification
     handler: Optional[Callable[[Any], None]] = None
 
+    body_schema: marshmallow.Schema
+    param_schema: marshmallow.Schema
+
     __hash__ = object.__hash__
 
     def __init__(self, raw: dict, spec: Specification) -> None:
@@ -56,13 +65,17 @@ class Operation:
         self.raw = raw
         self.spec = spec
 
-        self.id = parsing.get_id(raw)
-        self.path, self.verb = parsing.get_route(raw)
+    @classmethod
+    def from_raw(cls, raw: dict, spec: Specification) -> "Operation":
+        op = cls(raw, spec)
+        op.id = parsing.get_id(raw)
+        op.path, op.verb = parsing.get_route(raw)
         # TODO move to parsing.get_tags
-        self.tags = raw["tags"]
+        op.tags = raw["tags"]
 
-        self.body_schema = validation.new_body_schema(raw)
-        self.param_schema = validation.new_param_schema(raw)
+        op.body_schema = validation.new_body_schema(raw)
+        op.param_schema = validation.new_param_schema(raw)
+        return op
 
     @property
     def has_params(self) -> bool:
@@ -99,12 +112,17 @@ class Operations:
 
         self._by_id = {}
         self._by_key = {}
+
+    @classmethod
+    def from_raw(cls, spec: Specification) -> "Operations":
+        ops = cls(spec)
         for _, verb, raw_operation in parsing.iter_operations(spec.raw):
             id = parsing.get_id(raw_operation)
             route = parsing.get_route(raw_operation)
-            operation = Operation(raw_operation, spec)
-            self._by_id[id] = operation
-            self._by_key[route] = operation
+            operation = Operation.from_raw(raw_operation, spec)
+            ops._by_id[id] = operation
+            ops._by_key[route] = operation
+        return ops
 
     def by_id(self, operation_id: str) -> Operation:
         return self._by_id[operation_id]
