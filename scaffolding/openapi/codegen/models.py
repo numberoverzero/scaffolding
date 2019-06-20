@@ -5,10 +5,10 @@ from ...misc import Template
 from ..proto_spec import ProtoSpec
 
 
-__all__ = ["list_backends", "render_models"]
+__all__ = ["list_model_backends", "render_models"]
 
 
-def list_backends():
+def list_model_backends():
     return ModelBackend.list_backends()
 
 

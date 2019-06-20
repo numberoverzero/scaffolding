@@ -11,6 +11,7 @@ Generate and run a stubbed service:
 
 ```
 scaffold generate-resources \
+  --backend falcon \
   --spec ~/my-spec.yaml \
   --out out.py
 python out.py
