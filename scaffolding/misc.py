@@ -8,13 +8,17 @@ __all__ = ["Missing", "Sentinel", "Template"]
 
 
 class Template:
-    def __init__(self, tpl: jinja2.Template) -> None:
+    def __init__(self, tpl: jinja2.Template, strip_blocks=True) -> None:
         self.tpl = tpl
+        self.strip_blocks = strip_blocks
 
     def render_block(self, __name: str, **kwargs) -> str:
         block = self.tpl.blocks[__name]
         ctx = self.tpl.new_context(vars=kwargs)
-        return "".join(block(ctx))
+        t = "".join(block(ctx))
+        if self.strip_blocks:
+            t = t.strip()
+        return t
 
     block = render_block
 

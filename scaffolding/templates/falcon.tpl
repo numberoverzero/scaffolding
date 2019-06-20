@@ -1,4 +1,5 @@
-{% block header %}import falcon
+{% block header %}
+import falcon
 import json
 import os
 import scaffolding
@@ -6,6 +7,7 @@ from scaffolding.middleware import OpenApiAuthentication, OpenApiRequestValidati
 from scaffolding.openapi import Specification
 from scaffolding.prototype import serve, global_cors
 from scaffolding.resources import tag
+
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
@@ -22,17 +24,18 @@ class MyAuthentication(OpenApiAuthentication):
         # TODO load AccountModel from database, dynamodb..
         return "token", token
 {% endblock %}
-{% block resource %}
 
+{% block resource %}
 @tag(path="{{ path }}")
 class {{ resource }}:{% for op in operations %}
     def on_{{ op.verb }}(self, req: falcon.Request, resp: falcon.Response, **params) -> None:
         """{{ op.id }}"""
         resp.media = ctx = format(req, params)
         print(dump(ctx))
-{% endfor %}{%  endblock %}
-{% block footer %}
+{% endfor %}
+{% endblock %}
 
+{% block footer %}
 spec = Specification.from_file(f"{HERE}/v1.yaml")
 api = falcon.API(
     middleware=[
@@ -47,4 +50,4 @@ resources = [{% for resource in resources %}
     {{ resource }}(),{% endfor %}
 ]
 serve(api, spec, resources)
-{%  endblock %}
+{% endblock %}

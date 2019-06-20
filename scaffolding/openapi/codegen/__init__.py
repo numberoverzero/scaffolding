@@ -24,10 +24,9 @@ def generate_resources(spec: Specification, out_path: str) -> None:
         path = next(iter(operations)).path
         resources.append(tpl.block("resource", resource=resource_cls, verbs=verbs, operations=operations, path=path))
     footer = tpl.block("footer", resources=classes, spec_path=spec.source_filename)
+    sp = "\n\n\n"
     with open(out_path, "wt") as out:
-        out.write(header)
-        out.write("".join(resources))
-        out.write(footer)
+        out.write(f"{header}{sp}{sp.join(resources)}{sp}{footer}\n")
 
 
 def generate_models(spec: Specification, backend_name: str, out_path: str) -> None:
