@@ -37,6 +37,21 @@ class Template:
     @classmethod
     def from_pkg(cls, tpl_name, *, pkg_name="scaffolding", pkg_path="templates") -> "Template":
         env = jinja2.Environment(loader=jinja2.PackageLoader(pkg_name, pkg_path))
+
+        def render_python(v):
+            rp = render_python
+            if isinstance(v, str):
+                return f'"{v}"'
+            elif isinstance(v, list):
+                return "[" + ", ".join(rp(x) for x in v) + "]"
+            elif isinstance(v, tuple):
+                return "(" + ", ".join(rp(x) for x in v) + ")"
+            elif isinstance(v, dict):
+                return "{" + ", ".join(f"{k}: {rp(x)}" for (k, x) in v.items()) + "}"
+            else:
+                return v
+
+        env.filters["python"] = render_python
         tpl = env.get_template(tpl_name)
         return cls(tpl)
 
