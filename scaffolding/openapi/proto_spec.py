@@ -28,6 +28,7 @@ Sample protospec::
           - List
 """
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 import yaml
@@ -75,6 +76,74 @@ class ProtoSpec:
         spec = cls(raw)
         spec.source_filename = path
         return spec
+
+    def to_oas_raw(self) -> dict:
+        now = datetime.now(tz=timezone.utc)
+
+        def simple_response(model_name, response_name=None):
+            return {
+                response_name or model_name: {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": f"#/components/schemas/{model_name}"
+                            }
+                        }
+                    }
+                }
+            }
+
+        def to_object(model: Model):
+            return {
+                model.name: {
+                    "type": "object",
+                    "required": list(model.fields),
+                    "properties": {
+                        f.name: {"type": f.type}
+                        for f in model.fields.values()
+                    }
+                }
+            }
+
+        raw = {
+            "openapi": "3.0.0",
+            "info": {
+                "version": ".".join(map(str, now.isocalendar())),
+                "title": "REPLACE_ME",
+                "license": {
+                    "name": "MIT",
+                    "url": "https://opensource.org/licenses/MIT"
+                }
+            },
+            "servers": [{"url": "http://localhost:8080"}],
+            "components": {
+                "securitySchemes": {},
+                "schemas": {},
+                "requestBodies": {},
+                "responses": {},
+                "parameters": {}
+            },
+            "paths": {}
+        }  # type: dict
+        schemas = raw["components"]["schemas"]
+        responses = raw["components"]["responses"]
+        if "Error" not in self.models:
+            schemas["Error"] = {
+                "type": "object",
+                "required": ["code", "message"],
+                "properties": {
+                    "code": {"type": "string"},
+                    "message": {"type": "string"}
+                }
+            }
+            responses.update(simple_response("Error"))
+        for model in self.models.values():
+            schemas.update(to_object(model))
+        # TODO requestBodies
+        # TODO responses
+        # TODO parameters
+        # TODO paths
+        return raw
 
 
 def _parse_models(raw: dict) -> Dict[str, Model]:

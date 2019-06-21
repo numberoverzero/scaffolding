@@ -1,6 +1,8 @@
 import logging
 from typing import List
 
+import yaml
+
 from ...misc import Template
 from ..proto_spec import ProtoSpec
 from ..spec import Specification
@@ -17,7 +19,9 @@ def generate_models(backend_name: str, proto_spec: ProtoSpec, out_path: str) -> 
 
 
 def generate_oas_spec(proto_spec: ProtoSpec, out_path: str) -> None:
-    raise NotImplementedError
+    raw = proto_spec.to_oas_raw()
+    with open(out_path, "wt") as out:
+        yaml.safe_dump(raw, stream=out, sort_keys=False)
 
 
 def generate_falcon_resources(spec: Specification, out_path: str) -> None:
