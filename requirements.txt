@@ -1,7 +1,7 @@
 alembic~=1.0
 argon2_cffi~=19.0
 bloop~=2.4
-cryptography~=2.3
+cryptography~=42.0
 falcon~=2.0
 falcon-cors~=1.1
 marshmallow~=3.0a1
@@ -10,7 +10,7 @@ psycopg2~=2.7
 pyyaml~=5.0
 sqlalchemy~=1.2
 
-jinja2~=2.0
+jinja2~=3.1
 click~=7.0
 coverage
 flake8
